@@ -16,7 +16,7 @@ object PoolExample {
 
   def main(args: Array[String]) {
 
-    val conf = new SparkConf().setAppName("Pool Example Before")
+    val conf = new SparkConf().setAppName("Pool Example After")
     conf.setIfMissing("spark.master", "local[*]")
 
     val spark = SparkSession
@@ -25,24 +25,24 @@ object PoolExample {
       .getOrCreate()
 
     // before FAIR pool
-    Range(0, 15).foreach { i =>
-      val csv = spark.read
-        .csv(s"file:////Users/toddmcgrath/Development/tmp/csv/stock${i}.csv")
-      println(csv.count)
-      csv.foreachPartition(i => println(i))
-    }
-
-    // After FAIR POOL
-//    spark.sparkContext.setLocalProperty("spark.scheduler.pool", "fair_pool")
-//
-//    Range(0, 15).par.foreach { i =>
+//    Range(0, 15).foreach { i =>
 //      val csv = spark.read
 //        .csv(s"file:////Users/toddmcgrath/Development/tmp/csv/stock${i}.csv")
 //      println(csv.count)
-//
-//      spark.sparkContext.setLocalProperty("spark.scheduler.pool", "a_different_pool")
 //      csv.foreachPartition(i => println(i))
 //    }
+
+    // After FAIR POOL
+    spark.sparkContext.setLocalProperty("spark.scheduler.pool", "fair_pool")
+
+    Range(0, 15).par.foreach { i =>
+      val csv = spark.read
+        .csv(s"file:////Users/toddmcgrath/Development/tmp/csv/stock${i}.csv")
+      println(csv.count)
+
+      spark.sparkContext.setLocalProperty("spark.scheduler.pool", "a_different_pool")
+      csv.foreachPartition(i => println(i))
+    }
 
     spark.stop()
     sys.exit(0)
